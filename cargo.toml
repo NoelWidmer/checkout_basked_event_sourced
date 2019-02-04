@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+    "domain_model",
+    "domain_services",
+    "app",
+    "infra",
+    "edge"
+]
