@@ -1,20 +1,19 @@
-use super::Entity;
-use super::AggregateRoot;
-use super::Command;
-use super::Event;
-use super::ExecuteError;
-use super::SimulateError;
+use super::*;
 
 pub struct Aggregate<Inner: AggregateRoot> {
     is_corrupt: bool,
-    root: Entity<Inner>
+    generation: u64,
+    root: Entity<Inner>, 
+    store: Box<EventStore<Inner>>
 }
 
 impl<Inner: AggregateRoot> Aggregate<Inner> {
-    pub fn new(id: Inner::Id, inner: Inner) -> Self {
+    pub fn new_from_template(id: Inner::Id, template: Inner, store: Box<EventStore<Inner>>) -> Self {
         Self {
             is_corrupt: false,
-            root: Entity::new(id, inner)
+            generation: 0,
+            root: Entity::new(id, template), 
+            store
         }
     }
 
@@ -36,19 +35,28 @@ impl<Inner: AggregateRoot> Aggregate<Inner> {
     pub fn execute(&mut self, command: Command<Inner::CommandData>) -> Result<(), ExecuteError<Inner::HandleError, Inner::ApplyError>> {
         match self.simulate(command) {
             Ok(events) => {
-                // TODO persist event.
-                
-                match self.root.inner_mut().apply(events) {
+                match self.store.store(&events, self.generation) {
                     Ok(()) => {
-                        // Applied.
-                        Ok(())
+                        // Events stored.
                     }, 
-                    Err(err) => {
-                        // Apply failed.
-                        self.is_corrupt = true;
-                        Err(ExecuteError::CouldNotApply(err))
+                    Err(()) => return Err(ExecuteError::CouldNotStore)
+                }
+
+                for event in events {                
+                    match self.root.inner_mut().apply(event) {
+                        Ok(()) => {
+                            // Event applied.
+                            self.generation += 1;
+                        }, 
+                        Err(err) => {
+                            // Apply failed. We have just peristed corrupt data. This is bad!
+                            self.is_corrupt = true;
+                            return Err(ExecuteError::CouldNotApply(err))
+                        }
                     }
                 }
+
+                Ok(())
             }, 
             Err(simulate_err) => {
                 // Could not handle.
@@ -59,14 +67,23 @@ impl<Inner: AggregateRoot> Aggregate<Inner> {
             }
         }
     }
+
+    fn hydrate(&mut self) {
+        // TODO hydrate
+    }
 }
 
 impl<Inner: AggregateRoot + Default> Aggregate<Inner> {
-    pub fn new_default(id: Inner::Id) -> Self {
-        Self {
+    pub fn new(id: Inner::Id, store: Box<EventStore<Inner>>) -> Self {
+        let mut agg = Self {
             is_corrupt: false,
-            root: Entity::new_default(id)
-        }
+            generation: 0,
+            root: Entity::new_default(id), 
+            store
+        };
+
+        agg.hydrate();
+        return agg;
     }
 }
 
@@ -81,7 +98,7 @@ impl<Inner: AggregateRoot> Eq for Aggregate<Inner> {
 
 
 
-#[cfg(test)]
+/*#[cfg(test)]
 mod tests {
     use super::super::HasId;
     use super::super::Command;
@@ -136,4 +153,4 @@ mod tests {
         let a = Aggregate::new(55, Test::new());
         assert!(*a.id() == 55);
     }
-}
+}*/

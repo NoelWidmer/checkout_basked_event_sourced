@@ -9,6 +9,8 @@ mod aggregate_root;
 mod execute_error;
 mod simulate_error;
 
+mod event_store;
+
 pub use self::event::Event;
 pub use self::command::Command;
 
@@ -19,3 +21,5 @@ pub use self::aggregate::Aggregate;
 pub use self::aggregate_root::AggregateRoot;
 pub use self::execute_error::ExecuteError;
 pub use self::simulate_error::SimulateError;
+
+pub use self::event_store::EventStore;

@@ -1,4 +1,4 @@
-use super::HasId;
+use super::*;
 
 pub struct Entity<Inner: HasId> {
     id: Inner::Id,

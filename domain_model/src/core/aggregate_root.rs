@@ -1,6 +1,4 @@
-use super::HasId;
-use super::Command;
-use super::Event;
+use super::*;
 
 pub trait AggregateRoot : HasId {
     type CommandData;
@@ -9,5 +7,5 @@ pub trait AggregateRoot : HasId {
     type ApplyError;
 
     fn handle(&self, command: Command<Self::CommandData>) -> Result<Vec<Event<Self::EventData>>, Self::HandleError>;
-    fn apply(&self, event: Vec<Event<Self::EventData>>) -> Result<(), Self::ApplyError>;
+    fn apply(&self, event: Event<Self::EventData>) -> Result<(), Self::ApplyError>;
 }
