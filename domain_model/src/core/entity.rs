@@ -1,40 +1,69 @@
-pub trait Entity<Id: Eq> {
-    fn id(&self) -> &Id;
+use super::HasId;
+
+pub struct Entity<Inner: HasId> {
+    id: Inner::Id,
+    inner: Inner
 }
 
-impl<T: Entity<Id>, Id: Eq> PartialEq for T {
-    fn eq(&self, other: &T) -> bool {
-        self.id() == other.id()
+impl<Inner: HasId> Entity<Inner> {
+    fn new(id: Inner::Id, inner: Inner) -> Self {
+        Self {
+            id, 
+            inner
+        }
+    }
+
+    fn id(&self) -> &Inner::Id {
+        &self.id
+    }
+
+    fn inner(&self) -> &Inner {
+        &self.inner
+    }
+
+    fn inner_mut(&mut self) -> &mut Inner {
+        &mut self.inner
     }
 }
 
-impl<T: Entity<Id>, Id: Eq> Eq for T {
+impl<Inner: HasId> PartialEq for Entity<Inner> {
+    fn eq(&self, other: &Entity<Inner>) -> bool {
+        self.id == other.id
+    }
+}
+
+impl<Inner: HasId> Eq for Entity<Inner> {
 }
 
 #[cfg(test)]
 mod tests {
-    struct TestEntity {
-        id: String
+    use super::Entity;
+    use super::HasId;
+
+    struct Test {
     }
 
-    impl TestEntity {
-        pub fn new(id: String) -> Self {
-            Self {
-                id
-            }
+    impl Test {
+        fn new() -> Self {
+            Self { }
         }
     }
 
-    impl<'a> super::Entity<String> for TestEntity {
-        fn id(&self) -> &String {
-            &self.id
-        }
+    impl HasId for Test {
+        type Id = usize;
     }
     
     #[test]
-    fn entity_equals() {
-        let a = TestEntity::new("hello".to_string());
-        let b = TestEntity::new("hello".to_string());
-        assert_eq!(a, b);
+    fn entity_eq() {
+        let a = Entity::new(99, Test::new());
+        let b = Entity::new(99, Test::new());
+        assert!(a == b);
+    }
+    
+    #[test]
+    fn entity_neq() {
+        let a = Entity::new(77, Test::new());
+        let b = Entity::new(88, Test::new());
+        assert!(a != b);
     }
 }
