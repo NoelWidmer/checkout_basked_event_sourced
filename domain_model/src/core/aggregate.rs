@@ -1,80 +1,15 @@
 use super::*;
+use std::sync::Arc;
 
-pub struct Aggregate<Inner: AggregateRoot> {
+pub struct Aggregate<Root: AggregateRoot + Default> {
     is_corrupt: bool,
     generation: u64,
-    root: Entity<Inner>, 
-    store: Box<EventStore<Inner>>
+    root: Entity<Root>, 
+    store: Arc<EventStore<Root>>
 }
 
-impl<Inner: AggregateRoot> Aggregate<Inner> {
-    pub fn new_from_template(id: Inner::Id, template: Inner, store: Box<EventStore<Inner>>) -> Self {
-        Self {
-            is_corrupt: false,
-            generation: 0,
-            root: Entity::new(id, template), 
-            store
-        }
-    }
-
-    pub fn id(&self) -> &Inner::Id {
-        self.root.id()
-    }
-
-    pub fn simulate(&self, command: Command<Inner::CommandData>) -> Result<Vec<Event<Inner::EventData>>, SimulateError<Inner::HandleError>> {
-        if self.is_corrupt {
-            Err(SimulateError::CorruptionDetected)
-        } else {
-            match self.root.inner().handle(command) {
-                Ok(events) => Ok(events), 
-                Err(err) => Err(SimulateError::CouldNotHandle(err))
-            }
-        }
-    }
-
-    pub fn execute(&mut self, command: Command<Inner::CommandData>) -> Result<(), ExecuteError<Inner::HandleError, Inner::ApplyError>> {
-        match self.simulate(command) {
-            Ok(events) => {
-                match self.store.store(&events, self.generation) {
-                    Ok(()) => {
-                        // Events stored.
-                    }, 
-                    Err(()) => return Err(ExecuteError::CouldNotStore)
-                }
-
-                for event in events {                
-                    match self.root.inner_mut().apply(event) {
-                        Ok(()) => {
-                            // Event applied.
-                            self.generation += 1;
-                        }, 
-                        Err(err) => {
-                            // Apply failed. We have just peristed corrupt data. This is bad!
-                            self.is_corrupt = true;
-                            return Err(ExecuteError::CouldNotApply(err))
-                        }
-                    }
-                }
-
-                Ok(())
-            }, 
-            Err(simulate_err) => {
-                // Could not handle.
-                match simulate_err {
-                    SimulateError::CorruptionDetected => Err(ExecuteError::CorruptionDetected),
-                    SimulateError::CouldNotHandle(handle_err) => Err(ExecuteError::CouldNotHandle(handle_err))
-                }
-            }
-        }
-    }
-
-    fn hydrate(&mut self) {
-        // TODO hydrate
-    }
-}
-
-impl<Inner: AggregateRoot + Default> Aggregate<Inner> {
-    pub fn new(id: Inner::Id, store: Box<EventStore<Inner>>) -> Self {
+impl<Root: AggregateRoot + Default> Aggregate<Root> {
+    pub fn new(id: Root::Id, store: Arc<EventStore<Root>>) -> Result<Self, AggregateError<Root>> {
         let mut agg = Self {
             is_corrupt: false,
             generation: 0,
@@ -82,18 +17,74 @@ impl<Inner: AggregateRoot + Default> Aggregate<Inner> {
             store
         };
 
-        agg.hydrate();
-        return agg;
+        agg.hydrate().map(|()| agg)
+    }
+
+    pub fn id(&self) -> &Root::Id {
+        self.root.id()
+    }
+
+    pub fn simulate(&self, command: Command<Root::CommandData>) -> Result<Vec<Event<Root::EventData>>, AggregateError<Root>> {
+        if self.is_corrupt {
+            Err(AggregateError::CorruptionDetected)
+        } else {
+            self.root
+                .inner()
+                .handle(command)
+                .map_err(|handle_err| AggregateError::CouldNotHandleCommand(handle_err))
+        }
+    }
+
+    pub fn execute(&mut self, command: Command<Root::CommandData>) -> Result<(), AggregateError<Root>> {
+        self.simulate(command).and_then(|events| {
+            if let Err(()) = self.store.store(&events, self.generation) {
+                Err(AggregateError::CouldNotStoreEvents)
+            } else {
+                for event in events {
+                    self.apply_and_grow(event)?;
+                }
+
+                Ok(())
+            }
+        })
+    }
+
+    fn apply_and_grow(&mut self, event: Event<Root::EventData>) -> Result<(), AggregateError<Root>> {
+        match self.root.inner_mut().apply(event) {
+            Ok(()) => {
+                // Event applied.
+                self.generation += 1;
+                Ok(())
+            }, 
+            Err(apply_err) => {
+                // Apply failed. 
+                self.is_corrupt = true;
+                Err(AggregateError::CouldNotApplyEvent(apply_err))
+            }
+        }
+    }
+
+    fn hydrate(&mut self) -> Result<(), AggregateError<Root>> {
+        match self.store.retrieve_all(self.root.id()) {
+            Ok(events) => {
+                for event in events {                    
+                    self.apply_and_grow(event)?;
+                }
+
+                Ok(())
+            }, 
+            Err(()) => Err(AggregateError::CouldNotRetrieveEvents)
+        }
     }
 }
 
-impl<Inner: AggregateRoot> PartialEq for Aggregate<Inner> {
-    fn eq(&self, other: &Aggregate<Inner>) -> bool {
+impl<Root: AggregateRoot + Default> PartialEq for Aggregate<Root> {
+    fn eq(&self, other: &Aggregate<Root>) -> bool {
         self.root.id() == other.root.id()
     }
 }
 
-impl<Inner: AggregateRoot> Eq for Aggregate<Inner> {
+impl<Root: AggregateRoot + Default> Eq for Aggregate<Root> {
 }
 
 

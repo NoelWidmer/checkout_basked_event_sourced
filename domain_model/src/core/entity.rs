@@ -1,11 +1,11 @@
 use super::*;
 
-pub struct Entity<Inner: HasId> {
+pub struct Entity<Inner: IdDefinition> {
     id: Inner::Id,
     inner: Inner
 }
 
-impl<Inner: HasId> Entity<Inner> {
+impl<Inner: IdDefinition> Entity<Inner> {
     pub fn new(id: Inner::Id, inner: Inner) -> Self {
         Self {
             id, 
@@ -26,7 +26,7 @@ impl<Inner: HasId> Entity<Inner> {
     }
 }
 
-impl<Inner: HasId + Default> Entity<Inner> {
+impl<Inner: IdDefinition + Default> Entity<Inner> {
     pub fn new_default(id: Inner::Id) -> Self {
         Self {
             id, 
@@ -35,13 +35,13 @@ impl<Inner: HasId + Default> Entity<Inner> {
     }
 }
 
-impl<Inner: HasId> PartialEq for Entity<Inner> {
+impl<Inner: IdDefinition> PartialEq for Entity<Inner> {
     fn eq(&self, other: &Entity<Inner>) -> bool {
         self.id == other.id
     }
 }
 
-impl<Inner: HasId> Eq for Entity<Inner> {
+impl<Inner: IdDefinition> Eq for Entity<Inner> {
 }
 
 
@@ -49,7 +49,7 @@ impl<Inner: HasId> Eq for Entity<Inner> {
 #[cfg(test)]
 mod tests {
     use super::Entity;
-    use super::HasId;
+    use super::IdDefinition;
 
     struct UsizeTest {
     }
@@ -60,7 +60,7 @@ mod tests {
         }
     }
 
-    impl HasId for UsizeTest {
+    impl IdDefinition for UsizeTest {
         type Id = usize;
     }
     
@@ -93,7 +93,7 @@ mod tests {
         }
     }
 
-    impl HasId for StringTest {
+    impl IdDefinition for StringTest {
         type Id = String;
     }
     

@@ -1,6 +1,6 @@
 use super::*;
 
-pub trait AggregateRoot : HasId {
+pub trait AggregateRoot : IdDefinition {
     type CommandData;
     type HandleError;
     type EventData;

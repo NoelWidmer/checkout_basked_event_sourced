@@ -2,12 +2,11 @@ mod event;
 mod command;
 
 mod entity;
-mod has_id;
+mod id_definition;
 
 mod aggregate;
 mod aggregate_root;
-mod execute_error;
-mod simulate_error;
+mod aggregate_error;
 
 mod event_store;
 
@@ -15,11 +14,10 @@ pub use self::event::Event;
 pub use self::command::Command;
 
 pub use self::entity::Entity;
-pub use self::has_id::HasId;
+pub use self::id_definition::IdDefinition;
 
 pub use self::aggregate::Aggregate;
 pub use self::aggregate_root::AggregateRoot;
-pub use self::execute_error::ExecuteError;
-pub use self::simulate_error::SimulateError;
+pub use self::aggregate_error::AggregateError;
 
 pub use self::event_store::EventStore;
