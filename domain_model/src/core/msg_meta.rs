@@ -1,18 +1,16 @@
 use uuid::Uuid;
 use chrono::prelude::*;
 
-pub struct Command<Data> {
+pub struct MsgMeta {
     correlation: Uuid,
     timestamp: DateTime<Utc>,
-    data: Data
 }
 
-impl<Data> Command<Data> {
-    pub fn new(correlation: Uuid, timestamp: DateTime<Utc>, data: Data) -> Self {
+impl MsgMeta {    
+    pub fn new(correlation: Uuid, timestamp: DateTime<Utc>) -> Self {
         Self {
             timestamp, 
-            correlation, 
-            data
+            correlation,
         }
     }
 
@@ -22,9 +20,5 @@ impl<Data> Command<Data> {
 
     pub fn timestamp(&self) -> DateTime<Utc> {
         self.timestamp
-    }
-
-    pub fn data(&self) -> &Data {
-        &self.data
     }
 }

@@ -1,5 +1,6 @@
-mod event;
-mod command;
+mod msg_meta;
+mod evt;
+mod cmd;
 
 mod entity;
 mod id_definition;
@@ -10,8 +11,9 @@ mod aggregate_error;
 
 mod event_store;
 
-pub use self::event::Event;
-pub use self::command::Command;
+pub use self::msg_meta::MsgMeta;
+pub use self::evt::Evt;
+pub use self::cmd::Cmd;
 
 pub use self::entity::Entity;
 pub use self::id_definition::IdDefinition;

@@ -1,6 +1,6 @@
-use super::*;
+use super::cmds::*;
 
-pub enum Command {
+pub enum CmdData {
     AddItem(AddItem), 
     RemoveItem(RemoveItem)
 }

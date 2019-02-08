@@ -24,33 +24,33 @@ impl<Root: AggregateRoot + Default> Aggregate<Root> {
         self.root.id()
     }
 
-    pub fn simulate(&self, command: Command<Root::CommandData>) -> Result<Vec<Event<Root::EventData>>, AggregateError<Root>> {
+    pub fn simulate(&self, cmd: &Cmd<Root::CmdData>) -> Result<Vec<Evt<Root::EvtData>>, AggregateError<Root>> {
         if self.is_corrupt {
             Err(AggregateError::CorruptionDetected)
         } else {
             self.root
                 .inner()
-                .handle(command)
+                .handle(cmd)
                 .map_err(|handle_err| AggregateError::CouldNotHandleCommand(handle_err))
         }
     }
 
-    pub fn execute(&mut self, command: Command<Root::CommandData>) -> Result<(), AggregateError<Root>> {
-        self.simulate(command).and_then(|events| {
-            if let Err(()) = self.store.store(&events, self.generation) {
+    pub fn execute(&mut self, cmd: &Cmd<Root::CmdData>) -> Result<Vec<Evt<Root::EvtData>>, AggregateError<Root>> {
+        self.simulate(cmd).and_then(|evts| {
+            if let Err(()) = self.store.store(&evts, self.generation) {
                 Err(AggregateError::CouldNotStoreEvents)
             } else {
-                for event in events {
-                    self.apply_and_grow(event)?;
+                for evt in &evts {
+                    self.apply_and_grow(evt)?;
                 }
 
-                Ok(())
+                Ok(evts)
             }
         })
     }
 
-    fn apply_and_grow(&mut self, event: Event<Root::EventData>) -> Result<(), AggregateError<Root>> {
-        match self.root.inner_mut().apply(event) {
+    fn apply_and_grow(&mut self, evt: &Evt<Root::EvtData>) -> Result<(), AggregateError<Root>> {
+        match self.root.inner_mut().apply(evt) {
             Ok(()) => {
                 // Event applied.
                 self.generation += 1;
@@ -66,9 +66,9 @@ impl<Root: AggregateRoot + Default> Aggregate<Root> {
 
     fn hydrate(&mut self) -> Result<(), AggregateError<Root>> {
         match self.store.retrieve_all(self.root.id()) {
-            Ok(events) => {
-                for event in events {                    
-                    self.apply_and_grow(event)?;
+            Ok(evts) => {
+                for evt in &evts {                    
+                    self.apply_and_grow(evt)?;
                 }
 
                 Ok(())
