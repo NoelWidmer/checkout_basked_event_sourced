@@ -3,7 +3,7 @@ mod evt;
 mod cmd;
 
 mod entity;
-mod id_definition;
+mod id_type_def;
 
 mod aggregate;
 mod aggregate_root;
@@ -16,7 +16,7 @@ pub use self::evt::Evt;
 pub use self::cmd::Cmd;
 
 pub use self::entity::Entity;
-pub use self::id_definition::IdDefinition;
+pub use self::id_type_def::IdTypeDef;
 
 pub use self::aggregate::Aggregate;
 pub use self::aggregate_root::AggregateRoot;

@@ -2,16 +2,17 @@ use uuid::Uuid;
 use crate::core::*;
 use super::cmds::*;
 use super::evts::*;
+use super::Item;
 
-pub struct CustomerOffer {
-
+pub struct Checkout {
+    item: Vec<Item>
 }
 
-impl IdDefinition for CustomerOffer {
+impl IdTypeDef for Checkout {
     type Id = Uuid;
 }
 
-impl AggregateRoot for CustomerOffer {
+impl AggregateRoot for Checkout {
     type CmdData = super::CmdData;
     type HandleError = super::HandleError;
     type EvtData = super::EvtData;
@@ -36,7 +37,7 @@ impl AggregateRoot for CustomerOffer {
     }
 }
 
-impl CustomerOffer {
+impl Checkout {
     fn add_item(&self, meta: &MsgMeta, add_item: &AddItem) -> Result<Vec<Evt<super::EvtData>>, super::HandleError> {
         Ok(Vec::new())
     }
