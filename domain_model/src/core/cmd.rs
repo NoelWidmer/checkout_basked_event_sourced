@@ -13,8 +13,8 @@ impl<Data> Cmd<Data> {
         }
     }
 
-    pub fn meta(&self) -> &MsgMeta {
-        &self.meta
+    pub fn meta(&self) -> MsgMeta {
+        self.meta
     }
 
     pub fn data(&self) -> &Data {

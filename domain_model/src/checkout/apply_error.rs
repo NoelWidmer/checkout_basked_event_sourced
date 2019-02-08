@@ -1,3 +1,4 @@
-pub struct ApplyError {
-
+pub enum ApplyError {
+    ItemAlreadyAdded, 
+    ItemNotPresent
 }

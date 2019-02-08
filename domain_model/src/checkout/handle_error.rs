@@ -1,3 +1,4 @@
-pub struct HandleError {
-
+pub enum HandleError {
+    ItemAlreadyAdded, 
+    ItemNotYetAdded, 
 }

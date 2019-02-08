@@ -5,5 +5,5 @@ authors = ["Noël Widmer <noel.widmer@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-uuid = "0.7"
+uuid = { version = "0.7", features = ["v4"] }
 chrono = "0.4"

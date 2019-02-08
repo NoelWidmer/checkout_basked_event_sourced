@@ -1,9 +1,15 @@
 use super::*;
 use uuid::Uuid;
+use crate::core::IdTypeDef;
 
+#[derive(Clone, Copy)]
 pub struct Item {
     product_id: Uuid, 
     quantity: Quantity,
+}
+
+impl IdTypeDef for Item {
+    type Id = Uuid;
 }
 
 impl Item {
