@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use crate::checkout::Quantity;
+use crate::basket::Quantity;
 
 pub struct ChangeQuantity {
     pub item_id: Uuid, 

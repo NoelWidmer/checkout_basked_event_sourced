@@ -8,15 +8,15 @@ use super::{
     Quantity
 };
 
-pub struct Checkout {
+pub struct Basket {
     items: HashMap<Uuid, Item>
 }
 
-impl IdTypeDef for Checkout {
+impl IdTypeDef for Basket {
     type Id = Uuid;
 }
 
-impl AggregateRoot for Checkout {
+impl AggregateRoot for Basket {
     type CmdData = super::CmdData;
     type HandleError = super::HandleError;
     type EvtData = super::EvtData;
@@ -41,7 +41,7 @@ impl AggregateRoot for Checkout {
     }
 }
 
-impl Checkout {
+impl Basket {
     fn add_item(&self, correlation: Uuid, add_item: &AddItem) -> Result<Vec<Evt<super::EvtData>>, super::HandleError> {
         if self.items.iter().any(|(_, item)| item.product_id() == add_item.product_id) {
             Err(super::HandleError::ItemAlreadyAdded)

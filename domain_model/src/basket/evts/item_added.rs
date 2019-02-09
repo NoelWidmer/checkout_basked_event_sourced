@@ -1,5 +1,5 @@
 use crate::core::Entity;
-use crate::checkout::Item;
+use crate::basket::Item;
 
 pub struct ItemAdded {
     pub item: Entity<Item>

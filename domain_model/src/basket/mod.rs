@@ -1,4 +1,4 @@
-mod checkout;
+mod basket;
 mod evt_data;
 mod cmd_data;
 mod handle_error;
@@ -9,7 +9,7 @@ mod item;
 pub mod cmds;
 pub mod evts;
 
-pub use self::checkout::Checkout;
+pub use self::basket::Basket;
 pub use self::evt_data::EvtData;
 pub use self::cmd_data::CmdData;
 pub use self::handle_error::HandleError;
