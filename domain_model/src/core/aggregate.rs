@@ -38,13 +38,17 @@ impl<Root: AggregateRoot + IdTypeDef + Default> Aggregate<Root> {
 
     pub fn execute(&mut self, cmd: &Cmd<Root::CmdData>) -> Result<Vec<Evt<Root::EvtData>>, AggregateError<Root>> {
         self.simulate(cmd).and_then(|evts| {
-            if let Err(()) = self.store.store(&evts, self.generation) {
-                Err(AggregateError::CouldNotStoreEvents)
-            } else {
-                for evt in &evts {
-                    self.apply_and_grow(evt)?;
-                }
+            if evts.len() > 0 {
+                if let Err(()) = self.store.store(&evts, self.generation) {
+                    Err(AggregateError::CouldNotStoreEvents)
+                } else {
+                    for evt in &evts {
+                        self.apply_and_grow(evt)?;
+                    }
 
+                    Ok(evts)
+                }
+            } else {
                 Ok(evts)
             }
         })

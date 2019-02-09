@@ -1,4 +1,4 @@
-pub enum ApplyError {
+pub enum Error {
     ItemAlreadyPresent, 
     ItemNotPresent
 }

@@ -7,11 +7,8 @@ pub use self::evt_data::EvtData;
 mod cmd_data;
 pub use self::cmd_data::CmdData;
 
-mod handle_error;
-pub use self::handle_error::HandleError;
-
-mod apply_error;
-pub use self::apply_error::ApplyError;
+mod error;
+pub use self::error::Error;
 
 mod quantity;
 pub use self::quantity::Quantity;

@@ -3,5 +3,5 @@ use crate::basket::Quantity;
 
 pub struct ChangeQuantity {
     pub item_id: Uuid, 
-    pub quantity: Quantity,
+    pub new_quantity: Quantity,
 }
