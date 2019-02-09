@@ -16,3 +16,12 @@ impl Quantity {
         self.val
     }
 }
+
+impl PartialEq for Quantity {
+    fn eq(&self, other: &Quantity) -> bool {
+        self.val == other.val
+    }
+}
+
+impl Eq for Quantity {
+}

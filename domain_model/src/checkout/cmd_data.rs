@@ -2,5 +2,6 @@ use super::cmds::*;
 
 pub enum CmdData {
     AddItem(AddItem), 
-    RemoveItem(RemoveItem)
+    RemoveItem(RemoveItem),
+    ChangeQuantity(ChangeQuantity),
 }
