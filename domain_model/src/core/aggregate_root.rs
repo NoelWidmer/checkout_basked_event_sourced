@@ -1,6 +1,6 @@
 use super::*;
 
-pub trait AggregateRoot : IdTypeDef {
+pub trait AggregateRoot {
     type CmdData;
     type HandleError;
     type EvtData;

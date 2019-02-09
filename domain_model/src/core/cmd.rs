@@ -21,3 +21,11 @@ impl<Data> Cmd<Data> {
         &self.data
     }
 }
+
+impl<Data: Copy> Copy for Cmd<Data> { }
+
+impl<Data: Clone> Clone for Cmd<Data> {
+    fn clone(&self) -> Self {
+        Self::new(self.meta, self.data.clone())
+    }
+}

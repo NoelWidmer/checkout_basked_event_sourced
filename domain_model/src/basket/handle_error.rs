@@ -1,5 +1,5 @@
 pub enum HandleError {
-    ItemAlreadyAdded, 
-    ItemNotYetAdded, 
+    ItemAlreadyPresent, 
+    ItemNotPresent, 
     QuantityRemainsUnchanged
 }

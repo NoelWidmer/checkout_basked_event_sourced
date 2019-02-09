@@ -1,14 +1,14 @@
 use super::*;
 use std::sync::Arc;
 
-pub struct Aggregate<Root: AggregateRoot + Default> {
+pub struct Aggregate<Root: AggregateRoot + IdTypeDef + Default> {
     is_corrupt: bool,
     generation: u64,
     root: Entity<Root>, 
     store: Arc<EventStore<Root>>
 }
 
-impl<Root: AggregateRoot + Default> Aggregate<Root> {
+impl<Root: AggregateRoot + IdTypeDef + Default> Aggregate<Root> {
     pub fn new(id: Root::Id, store: Arc<EventStore<Root>>) -> Result<Self, AggregateError<Root>> {
         let mut agg = Self {
             is_corrupt: false,
@@ -17,7 +17,8 @@ impl<Root: AggregateRoot + Default> Aggregate<Root> {
             store
         };
 
-        agg.hydrate().map(|()| agg)
+        agg.hydrate()?;
+        Ok(agg)
     }
 
     pub fn id(&self) -> &Root::Id {
@@ -78,13 +79,13 @@ impl<Root: AggregateRoot + Default> Aggregate<Root> {
     }
 }
 
-impl<Root: AggregateRoot + Default> PartialEq for Aggregate<Root> {
+impl<Root: AggregateRoot + IdTypeDef + Default> PartialEq for Aggregate<Root> {
     fn eq(&self, other: &Aggregate<Root>) -> bool {
         self.root.id() == other.root.id()
     }
 }
 
-impl<Root: AggregateRoot + Default> Eq for Aggregate<Root> {
+impl<Root: AggregateRoot + IdTypeDef + Default> Eq for Aggregate<Root> {
 }
 
 

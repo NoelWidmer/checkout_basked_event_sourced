@@ -1,7 +1,8 @@
 mod add_item;
-mod remove_item;
-mod change_quantity;
-
 pub use self::add_item::AddItem;
+
+mod remove_item;
 pub use self::remove_item::RemoveItem;
+
+mod change_quantity;
 pub use self::change_quantity::ChangeQuantity;

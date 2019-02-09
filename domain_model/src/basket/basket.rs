@@ -44,7 +44,7 @@ impl AggregateRoot for Basket {
 impl Basket {
     fn add_item(&self, correlation: Uuid, add_item: &AddItem) -> Result<Vec<Evt<super::EvtData>>, super::HandleError> {
         if self.items.iter().any(|(_, item)| item.product_id() == add_item.product_id) {
-            Err(super::HandleError::ItemAlreadyAdded)
+            Err(super::HandleError::ItemAlreadyPresent)
         } else {
             let item = {
                 let item_id = Uuid::new_v4();
@@ -62,7 +62,7 @@ impl Basket {
         let existing_item = self.items.entry(*item_added.item.id());
 
         match existing_item {
-            std::collections::hash_map::Entry::Occupied(_) => Err(super::ApplyError::ItemAlreadyAdded), 
+            std::collections::hash_map::Entry::Occupied(_) => Err(super::ApplyError::ItemAlreadyPresent), 
             std::collections::hash_map::Entry::Vacant(_) => {
                 existing_item.or_insert(*item_added.item.inner());
                 Ok(())
@@ -76,7 +76,7 @@ impl Basket {
             let evt_data = super::EvtData::ItemRemoved(ItemRemoved{ item_id: remove_item.item_id });
             Ok(vec![ Evt::new(meta, evt_data) ])
         } else {
-            Err(super::HandleError::ItemNotYetAdded)
+            Err(super::HandleError::ItemNotPresent)
         }
     }
 
@@ -100,7 +100,7 @@ impl Basket {
                     Ok(vec![ Evt::new(meta, evt_data) ])
                 }
             },
-            None => Err(super::HandleError::ItemNotYetAdded)
+            None => Err(super::HandleError::ItemNotPresent)
         }
     }
 

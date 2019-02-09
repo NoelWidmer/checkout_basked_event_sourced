@@ -21,3 +21,11 @@ impl<Data> Evt<Data> {
         &self.data
     }
 }
+
+impl<Data: Copy> Copy for Evt<Data> { }
+
+impl<Data: Clone> Clone for Evt<Data> {
+    fn clone(&self) -> Self {
+        Self::new(self.meta, self.data.clone())
+    }
+}

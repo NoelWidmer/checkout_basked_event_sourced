@@ -1,4 +1,4 @@
 pub enum ApplyError {
-    ItemAlreadyAdded, 
+    ItemAlreadyPresent, 
     ItemNotPresent
 }
