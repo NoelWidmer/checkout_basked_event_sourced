@@ -5,7 +5,7 @@ authors = ["Noël Widmer <noel.widmer@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-domain_model = { path = "../domain_model" }
-domain_services = { path = "../domain_services" }
+domain = { path = "../domain" }
+use_cases = { path = "../use_cases" }
 app = { path = "../app" }
 infra = { path = "../infra" }

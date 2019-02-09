@@ -1,6 +1,8 @@
 use std::sync::Arc;
-use domain_model::core::*;
-use domain_model::basket::*;
+use domain::{
+    core::*,
+    basket::*
+};
 
 pub struct BasketSizeQueryModel {
     store: Arc<EventStore<Basket>>
