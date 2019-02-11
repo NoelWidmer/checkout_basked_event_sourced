@@ -1,2 +1,2 @@
-mod basket_size_query_model;
-pub use self::basket_size_query_model::BasketSizeQueryModel;
+mod basket_product_comeback_counter;
+pub use self::basket_product_comeback_counter::BasketProductComebackCounter;
