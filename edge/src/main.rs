@@ -1,3 +1,5 @@
+use app::ActorSystem;
+
 fn main() {
-    println!("Hello, world!");
+    ActorSystem::start("test");
 }

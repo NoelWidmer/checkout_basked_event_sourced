@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 domain = { path = "../domain" }
 use_cases = { path = "../use_cases" }
+actix = "0.7"
