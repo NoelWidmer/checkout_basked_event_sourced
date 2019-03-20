@@ -1,6 +1,6 @@
-use crate::core::Entity;
+use crate::core::EntityProxy;
 use crate::basket::Item;
 
 pub struct ItemAdded {
-    pub item: Entity<Item>
+    pub item: EntityProxy<Item>
 }

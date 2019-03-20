@@ -1,28 +1,53 @@
 use super::*;
 use std::sync::Arc;
 
-pub struct AggregateProxy<Root: Aggregate + IdTypeDef + Default> {
+pub struct AggregateProxy<Agg: Aggregate> {
     is_corrupt: bool,
     generation: u64,
-    root: Entity<Root>, 
-    store: Arc<EventStore<Root>>
+    entity_proxy: EntityProxy<Agg>, 
+    snapshot_store: Arc<SnapshotStore<Agg>>, 
+    event_store: Arc<EventStore<Agg>>,
 }
 
-impl<Root: Aggregate + IdTypeDef + Default> AggregateProxy<Root> {
-    pub fn new(id: Root::Id, store: Arc<EventStore<Root>>) -> Result<Self, AggregateError<Root>> {
-        let mut agg = AggregateProxy {
+impl<Agg: Aggregate> AggregateProxy<Agg> {
+    pub fn new(
+        id: Agg::Id, 
+        snapshot_store: Arc<SnapshotStore<Agg>>, 
+        event_store: Arc<EventStore<Agg>>) 
+        -> Result<Self, AggregateError<Agg>> {
+
+        let (generation, entity_proxy) = Self::hydrate_from_snapshot(id, &snapshot_store)?;
+
+        let mut aggregate_proxy = AggregateProxy {
             is_corrupt: false,
-            generation: 0,
-            root: Entity::new_default(id), 
-            store
+            generation,
+            entity_proxy, 
+            snapshot_store, 
+            event_store
         };
 
-        agg.hydrate()?;
-        Ok(agg)
+        aggregate_proxy.hydrate_from_events()?;
+        Ok(aggregate_proxy)
     }
 
-    fn hydrate(&mut self) -> Result<(), AggregateError<Root>> {
-        match self.store.retrieve_all(self.root.id()) {
+    fn hydrate_from_snapshot(id: Agg::Id, snapshot_store: &Arc<SnapshotStore<Agg>>) 
+    -> Result<(u64, EntityProxy<Agg>), AggregateError<Agg>> {
+        match snapshot_store.retrieve_latest(&id) {
+            Ok(Some(snapshot)) => {
+                let gen = snapshot.generation();
+
+                match Agg::try_from(snapshot.data()) {
+                    Ok(aggregate) => Ok((gen, EntityProxy::new(id, aggregate))), 
+                    Err(err) => Err(AggregateError::CouldNotHydrateFromSnapshot(err))
+                }
+            }, 
+            Ok(None) => Ok((0, EntityProxy::new_default(id))), 
+            Err(()) => Err(AggregateError::CouldNotRetrieveSnapshot)
+        }
+    }
+    
+    fn hydrate_from_events(&mut self) -> Result<(), AggregateError<Agg>> {        
+        match self.event_store.retrieve_all(self.entity_proxy.id()) {
             Ok(evts) => {
                 for evt in &evts {                    
                     self.apply_and_grow(evt)?;
@@ -34,8 +59,8 @@ impl<Root: Aggregate + IdTypeDef + Default> AggregateProxy<Root> {
         }
     }
 
-    fn apply_and_grow(&mut self, evt: &Evt<Root::EvtData>) -> Result<(), AggregateError<Root>> {
-        match self.root.inner_mut().apply(evt) {
+    fn apply_and_grow(&mut self, evt: &Evt<Agg::EvtData>) -> Result<(), AggregateError<Agg>> {
+        match self.entity_proxy.entity_mut().apply(evt) {
             Ok(()) => {
                 // Event applied.
                 self.generation += 1;
@@ -49,25 +74,25 @@ impl<Root: Aggregate + IdTypeDef + Default> AggregateProxy<Root> {
         }
     }
 
-    pub fn id(&self) -> &Root::Id {
-        self.root.id()
+    pub fn id(&self) -> &Agg::Id {
+        self.entity_proxy.id()
     }
 
-    pub fn simulate(&self, cmd: &Cmd<Root::CmdData>) -> Result<Vec<Evt<Root::EvtData>>, AggregateError<Root>> {
+    pub fn simulate(&self, cmd: &Cmd<Agg::CmdData>) -> Result<Vec<Evt<Agg::EvtData>>, AggregateError<Agg>> {
         if self.is_corrupt {
             Err(AggregateError::CorruptionDetected)
         } else {
-            self.root
-                .inner()
+            self.entity_proxy
+                .entity()
                 .handle(cmd)
                 .map_err(|handle_err| AggregateError::CouldNotHandleCommand(handle_err))
         }
     }
 
-    pub fn execute(&mut self, cmd: &Cmd<Root::CmdData>) -> Result<Vec<Evt<Root::EvtData>>, AggregateError<Root>> {
+    pub fn execute(&mut self, cmd: &Cmd<Agg::CmdData>) -> Result<Vec<Evt<Agg::EvtData>>, AggregateError<Agg>> {
         self.simulate(cmd).and_then(|evts| {
             if evts.len() > 0 {
-                if let Err(()) = self.store.store(&evts, self.generation) {
+                if let Err(()) = self.event_store.store(&evts, self.generation) {
                     Err(AggregateError::CouldNotStoreEvents)
                 } else {
                     for evt in &evts {
@@ -83,13 +108,13 @@ impl<Root: Aggregate + IdTypeDef + Default> AggregateProxy<Root> {
     }
 }
 
-impl<Root: Aggregate + IdTypeDef + Default> PartialEq for AggregateProxy<Root> {
-    fn eq(&self, other: &AggregateProxy<Root>) -> bool {
-        self.root.id() == other.root.id()
+impl<Agg: Aggregate> PartialEq for AggregateProxy<Agg> {
+    fn eq(&self, other: &AggregateProxy<Agg>) -> bool {
+        self.entity_proxy.id() == other.entity_proxy.id()
     }
 }
 
-impl<Root: Aggregate + IdTypeDef + Default> Eq for AggregateProxy<Root> {
+impl<Agg: Aggregate> Eq for AggregateProxy<Agg> {
 }
 
 

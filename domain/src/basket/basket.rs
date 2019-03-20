@@ -16,10 +16,31 @@ impl IdTypeDef for Basket {
     type Id = Uuid;
 }
 
+impl Default for Basket {
+    fn default() -> Self { 
+        Self {
+            items: HashMap::new()
+        }
+    }
+}
+
 impl Aggregate for Basket {
+    type SnapshotData = super::SnapshotData;
     type CmdData = super::CmdData;
     type EvtData = super::EvtData;
     type Error = super::Error;
+    
+    fn try_from(data: Self::SnapshotData) -> Result<Self, super::Error> {
+        let s = Self {
+            items: data.items()
+        };
+
+        Ok(s)
+    }
+
+    fn into(&self) -> Self::SnapshotData {
+        super::SnapshotData::new(self.items.clone())
+    }
 
     fn handle(&self, cmd: &Cmd<super::CmdData>) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
         let correlation = cmd.meta().correlation();
@@ -48,7 +69,7 @@ impl Basket {
             let item = {
                 let item_id = Uuid::new_v4();
                 let quantity = Quantity::new(1).expect("expected a quantity of 1");
-                Entity::new(item_id, Item::new(add_item.product_id, quantity))
+                EntityProxy::new(item_id, Item::new(add_item.product_id, quantity))
             };
 
             let meta = MsgMeta::new_now(correlation);
@@ -63,7 +84,7 @@ impl Basket {
         match existing_item {
             std::collections::hash_map::Entry::Occupied(_) => Err(super::Error::ItemAlreadyPresent), 
             std::collections::hash_map::Entry::Vacant(_) => {
-                existing_item.or_insert(*item_added.item.inner());
+                existing_item.or_insert(*item_added.item.entity());
                 Ok(())
             }
         }

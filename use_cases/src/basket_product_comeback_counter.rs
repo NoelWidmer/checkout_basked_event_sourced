@@ -23,7 +23,7 @@ impl BasketProductComebackCounter {
 
             match data {
                 EvtData::ItemAdded(item_added) => {
-                    let product_id = item_added.item.inner().product_id();
+                    let product_id = item_added.item.entity().product_id();
 
                     match product_id_2_count.get_mut(&product_id) {
                         Some(count) => *count += 1, 

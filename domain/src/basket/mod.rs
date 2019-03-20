@@ -1,6 +1,9 @@
 mod basket;
 pub use self::basket::Basket;
 
+mod snapshot_data;
+pub use self::snapshot_data::SnapshotData;
+
 mod evt_data;
 pub use self::evt_data::EvtData;
 

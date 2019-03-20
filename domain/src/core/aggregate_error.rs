@@ -1,9 +1,11 @@
 use super::*;
 
-pub enum AggregateError<Root: Aggregate> {
+pub enum AggregateError<Agg: Aggregate> {
+    CouldNotRetrieveSnapshot,
+    CouldNotHydrateFromSnapshot(Agg::Error),
     CouldNotRetrieveEvents,
     CouldNotStoreEvents, 
-    CouldNotHandleCommand(Root::Error), 
-    CouldNotApplyEvent(Root::Error),
+    CouldNotHandleCommand(Agg::Error), 
+    CouldNotApplyEvent(Agg::Error),
     CorruptionDetected, 
 }
