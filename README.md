@@ -1,2 +1,2 @@
-# ddd_in_rust
-This repository contains the code sample for my article series on Medium: "Applying DDD and Event Sourcing in Rust"
+# An event sourced checkout basked in Rust.
+This repository contains the sample code for my article on Medium: "How to build an event sourced checkout basked in Rust". The article has not yet been released.
