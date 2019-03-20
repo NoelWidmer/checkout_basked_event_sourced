@@ -16,7 +16,7 @@ impl IdTypeDef for Basket {
     type Id = Uuid;
 }
 
-impl AggregateRoot for Basket {
+impl Aggregate for Basket {
     type CmdData = super::CmdData;
     type EvtData = super::EvtData;
     type Error = super::Error;
