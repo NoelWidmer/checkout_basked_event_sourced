@@ -1,7 +1,6 @@
 use crate::core::*;
 
 pub struct EntityProxy<Entity: IdTypeDef> {
-    id: Entity::Id,
     entity: Entity
 }
 
