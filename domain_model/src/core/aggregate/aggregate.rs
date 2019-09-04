@@ -1,4 +1,4 @@
-use super::*;
+use crate::core::*;
 
 pub trait Aggregate : IdTypeDef + Default {
     type SnapshotData;
@@ -12,5 +12,3 @@ pub trait Aggregate : IdTypeDef + Default {
     fn handle(&self, cmd: &Cmd<Self::CmdData>) -> Result<Vec<Evt<Self::EvtData>>, Self::Error>;
     fn apply(&mut self, evt: &Evt<Self::EvtData>) -> Result<(), Self::Error>;
 }
-
-

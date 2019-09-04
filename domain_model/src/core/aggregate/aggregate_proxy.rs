@@ -1,4 +1,4 @@
-use super::*;
+use crate::core::*;
 use std::sync::Arc;
 
 pub struct AggregateProxy<Agg: Aggregate> {
@@ -6,14 +6,14 @@ pub struct AggregateProxy<Agg: Aggregate> {
     generation: u64,
     entity_proxy: EntityProxy<Agg>, 
     snapshot_store: Arc<SnapshotStore<Agg>>, 
-    event_store: Arc<EventStore<Agg>>,
+    event_store: Arc<EvtStore<Agg>>,
 }
 
 impl<Agg: Aggregate> AggregateProxy<Agg> {
     pub fn new(
         id: Agg::Id, 
         snapshot_store: Arc<SnapshotStore<Agg>>, 
-        event_store: Arc<EventStore<Agg>>) 
+        event_store: Arc<EvtStore<Agg>>) 
         -> Result<Self, AggregateError<Agg>> {
 
         let (generation, entity_proxy) = Self::hydrate_from_snapshot(id, &snapshot_store)?;

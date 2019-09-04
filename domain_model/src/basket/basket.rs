@@ -45,7 +45,7 @@ impl Aggregate for Basket {
     fn handle(&self, cmd: &Cmd<super::CmdData>) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
         let correlation = cmd.meta().correlation();
 
-        match cmd.data() {
+        match cmd.payload() {
             super::CmdData::AddItem(add_item) => self.add_item(correlation, add_item), 
             super::CmdData::RemoveItem(remove_item) => self.remove_item(correlation, remove_item),
             super::CmdData::ChangeQuantity(change_quantity) => self.change_quantity(correlation, change_quantity),
@@ -53,7 +53,7 @@ impl Aggregate for Basket {
     }
 
     fn apply(&mut self, evt: &Evt<super::EvtData>) -> Result<(), super::Error> {
-        match evt.data() {
+        match evt.payload() {
             super::EvtData::ItemAdded(item_added) => self.item_added(item_added), 
             super::EvtData::ItemRemoved(item_removed) => self.item_removed(item_removed), 
             super::EvtData::QuantityChanged(quantity_changed) => self.quantity_changed(quantity_changed),
@@ -72,7 +72,7 @@ impl Basket {
                 EntityProxy::new(item_id, Item::new(add_item.product_id, quantity))
             };
 
-            let meta = MsgMeta::new_now(correlation);
+            let meta = EvtMeta::new_now(correlation);
             let evt_data = super::EvtData::ItemAdded(ItemAdded { item });
             Ok(vec![ Evt::new(meta, evt_data) ])
         }
@@ -92,7 +92,7 @@ impl Basket {
 
     fn remove_item(&self, correlation: Uuid, remove_item: &RemoveItem) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
         if self.items.contains_key(&remove_item.item_id) {
-            let meta = MsgMeta::new_now(correlation);
+            let meta = EvtMeta::new_now(correlation);
             let evt_data = super::EvtData::ItemRemoved(ItemRemoved{ item_id: remove_item.item_id });
             Ok(vec![ Evt::new(meta, evt_data) ])
         } else {
@@ -112,7 +112,7 @@ impl Basket {
                     // Nothing needs to change.
                     Ok(Vec::new())
                 } else {
-                    let meta = MsgMeta::new_now(correlation);
+                    let meta = EvtMeta::new_now(correlation);
                     let evt_data = super::EvtData::QuantityChanged(QuantityChanged{ 
                         item_id: change_quantity.item_id , 
                         new_quantity: change_quantity.new_quantity

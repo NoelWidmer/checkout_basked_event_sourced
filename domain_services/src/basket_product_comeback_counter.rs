@@ -1,17 +1,17 @@
 use std::sync::Arc;
 use std::collections::HashMap;
 use uuid::Uuid;
-use domain::{
+use domain_model::{
     core::*,
     basket::*
 };
 
 pub struct BasketProductComebackCounter {
-    store: Arc<EventStore<Basket>>
+    store: Arc<EvtStore<Basket>>
 }
 
 impl BasketProductComebackCounter {
-    pub fn new(store: Arc<EventStore<Basket>>) -> Self {
+    pub fn new(store: Arc<EvtStore<Basket>>) -> Self {
         Self { store }
     }
 
@@ -19,7 +19,7 @@ impl BasketProductComebackCounter {
         let mut product_id_2_count = HashMap::new();
 
         for evt in self.store.retrieve_all(&basket_id)? {
-            let data = evt.data();
+            let data = evt.payload();
 
             match data {
                 EvtData::ItemAdded(item_added) => {

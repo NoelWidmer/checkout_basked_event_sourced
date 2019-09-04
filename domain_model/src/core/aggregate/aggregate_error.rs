@@ -1,4 +1,4 @@
-use super::*;
+use crate::core::*;
 
 pub enum AggregateError<Agg: Aggregate> {
     CouldNotRetrieveSnapshot,

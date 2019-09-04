@@ -1,4 +1,4 @@
-use super::*;
+use crate::core::*;
 
 pub struct Snapshot<Agg: Aggregate> {
     generation: u64,

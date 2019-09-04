@@ -1,9 +1,9 @@
 [package]
-name = "use_cases"
+name = "domain_model"
 version = "0.1.0"
 authors = ["Noël Widmer <noel.widmer@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-domain = { path = "../domain" }
 uuid = { version = "0.7", features = ["v4"] }
+chrono = "0.4"

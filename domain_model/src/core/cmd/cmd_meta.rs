@@ -2,22 +2,22 @@ use uuid::Uuid;
 use chrono::prelude::*;
 
 #[derive(Clone, Copy)]
-pub struct MsgMeta {
+pub struct CmdMeta {
     correlation: Uuid,
-    timestamp: DateTime<Utc>,
+    issued_at: DateTime<Utc>,
 }
 
-impl MsgMeta {    
-    pub fn new(correlation: Uuid, timestamp: DateTime<Utc>) -> Self {
+impl CmdMeta {    
+    pub fn new(correlation: Uuid, issued_at: DateTime<Utc>) -> Self {
         Self {
-            timestamp, 
             correlation,
+            issued_at, 
         }
     }
 
     pub fn new_now(correlation: Uuid) -> Self {
         Self {
-            timestamp: Utc::now(), 
+            issued_at: Utc::now(), 
             correlation,
         }
     }
@@ -26,7 +26,7 @@ impl MsgMeta {
         self.correlation
     }
 
-    pub fn timestamp(&self) -> DateTime<Utc> {
-        self.timestamp
+    pub fn issued_at(&self) -> DateTime<Utc> {
+        self.issued_at
     }
 }
