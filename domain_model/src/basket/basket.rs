@@ -9,29 +9,54 @@ use super::{
 };
 
 pub struct Basket {
+    id: Uuid,
     items: HashMap<Uuid, Item>
 }
 
 impl IdTypeDef for Basket {
     type Id = Uuid;
+
+    fn id(&self) -> Self::Id {
+        self.id
+    }
+}
+
+impl Basket {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn new_with_id(id: Uuid) -> Self {
+        Self {
+            id: id,
+            items: HashMap::new()
+        }
+    }
 }
 
 impl Default for Basket {
     fn default() -> Self { 
         Self {
+            id: Uuid::new_v4(),
             items: HashMap::new()
         }
     }
 }
 
 impl Aggregate for Basket {
+    type Kind = crate::AggregateKind;
     type SnapshotData = super::SnapshotData;
     type CmdData = super::CmdData;
     type EvtData = super::EvtData;
     type Error = super::Error;
+
+    fn kind() -> crate::AggregateKind {
+        crate::AggregateKind::Basket
+    }
     
     fn try_from(data: Self::SnapshotData) -> Result<Self, super::Error> {
         let s = Self {
+            id: data.id(), 
             items: data.items()
         };
 
@@ -39,10 +64,10 @@ impl Aggregate for Basket {
     }
 
     fn into(&self) -> Self::SnapshotData {
-        super::SnapshotData::new(self.items.clone())
+        super::SnapshotData::new(self.id, self.items.clone())
     }
 
-    fn handle(&self, cmd: &Cmd<super::CmdData>) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
+    fn handle(&self, cmd: &Cmd<Self>) -> Result<Vec<Evt<Self>>, super::Error> {
         let correlation = cmd.meta().correlation();
 
         match cmd.payload() {
@@ -52,7 +77,7 @@ impl Aggregate for Basket {
         }
     }
 
-    fn apply(&mut self, evt: &Evt<super::EvtData>) -> Result<(), super::Error> {
+    fn apply(&mut self, evt: &Evt<Self>) -> Result<(), super::Error> {
         match evt.payload() {
             super::EvtData::ItemAdded(item_added) => self.item_added(item_added), 
             super::EvtData::ItemRemoved(item_removed) => self.item_removed(item_removed), 
@@ -62,7 +87,7 @@ impl Aggregate for Basket {
 }
 
 impl Basket {
-    fn add_item(&self, correlation: Uuid, add_item: &AddItem) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
+    fn add_item(&self, correlation: Uuid, add_item: &AddItem) -> Result<Vec<Evt<Self>>, super::Error> {
         if self.items.iter().any(|(_, item)| item.product_id() == add_item.product_id) {
             Err(super::Error::ItemAlreadyPresent)
         } else {
@@ -73,8 +98,9 @@ impl Basket {
             };
 
             let meta = EvtMeta::new_now(correlation);
+            let subject = self.address();
             let evt_data = super::EvtData::ItemAdded(ItemAdded { item });
-            Ok(vec![ Evt::new(meta, evt_data) ])
+            Ok(vec![ Evt::new(meta, subject, evt_data) ])
         }
     }
 
@@ -90,11 +116,12 @@ impl Basket {
         }
     }
 
-    fn remove_item(&self, correlation: Uuid, remove_item: &RemoveItem) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
+    fn remove_item(&self, correlation: Uuid, remove_item: &RemoveItem) -> Result<Vec<Evt<Self>>, super::Error> {
         if self.items.contains_key(&remove_item.item_id) {
             let meta = EvtMeta::new_now(correlation);
+            let subject = self.address();
             let evt_data = super::EvtData::ItemRemoved(ItemRemoved{ item_id: remove_item.item_id });
-            Ok(vec![ Evt::new(meta, evt_data) ])
+            Ok(vec![ Evt::new(meta, subject, evt_data) ])
         } else {
             Err(super::Error::ItemNotPresent)
         }
@@ -105,7 +132,7 @@ impl Basket {
         Ok(())
     }
 
-    fn change_quantity(&self, correlation: Uuid, change_quantity: &ChangeQuantity) -> Result<Vec<Evt<super::EvtData>>, super::Error> {
+    fn change_quantity(&self, correlation: Uuid, change_quantity: &ChangeQuantity) -> Result<Vec<Evt<Self>>, super::Error> {
         match self.items.get(&change_quantity.item_id) {
             Some(item) => {
                 if item.quantity() == change_quantity.new_quantity {
@@ -113,12 +140,13 @@ impl Basket {
                     Ok(Vec::new())
                 } else {
                     let meta = EvtMeta::new_now(correlation);
+                    let subject = self.address();
                     let evt_data = super::EvtData::QuantityChanged(QuantityChanged{ 
                         item_id: change_quantity.item_id , 
                         new_quantity: change_quantity.new_quantity
                     });
 
-                    Ok(vec![ Evt::new(meta, evt_data) ])
+                    Ok(vec![ Evt::new(meta, subject, evt_data) ])
                 }
             },
             None => Err(super::Error::ItemNotPresent)

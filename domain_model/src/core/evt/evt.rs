@@ -1,14 +1,16 @@
 use crate::core::*;
 
-pub struct Evt<Payload> {
+pub struct Evt<Agg: Aggregate> {
     meta: EvtMeta,
-    payload: Payload,
+    subject: AggregateAddress<Agg>,
+    payload: Agg::EvtData,
 }
 
-impl<Payload> Evt<Payload> {
-    pub fn new(meta: EvtMeta, payload: Payload) -> Self {
+impl<Agg: Aggregate> Evt<Agg> {
+    pub fn new(meta: EvtMeta, subject: AggregateAddress<Agg>, payload: Agg::EvtData) -> Self {
         Self {
             meta,
+            subject,
             payload,
         }
     }
@@ -17,15 +19,11 @@ impl<Payload> Evt<Payload> {
         self.meta
     }
 
-    pub fn payload(&self) -> &Payload {
-        &self.payload
+    pub fn subject(&self) -> &AggregateAddress<Agg> {
+        &self.subject
     }
-}
 
-impl<Payload: Copy> Copy for Evt<Payload> { }
-
-impl<Payload: Clone> Clone for Evt<Payload> {
-    fn clone(&self) -> Self {
-        Self::new(self.meta, self.payload.clone())
+    pub fn payload(&self) -> &Agg::EvtData {
+        &self.payload
     }
 }

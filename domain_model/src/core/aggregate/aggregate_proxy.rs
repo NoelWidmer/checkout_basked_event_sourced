@@ -32,11 +32,11 @@ impl<Agg: Aggregate> AggregateProxy<Agg> {
 
     fn hydrate_from_snapshot(id: Agg::Id, snapshot_store: &Arc<SnapshotStore<Agg>>) 
     -> Result<(u64, EntityProxy<Agg>), AggregateError<Agg>> {
-        match snapshot_store.retrieve_latest(&id) {
+        match snapshot_store.retrieve(&id) {
             Ok(Some(snapshot)) => {
                 let gen = snapshot.generation();
 
-                match Agg::try_from(snapshot.data()) {
+                match Agg::try_from(snapshot.payload()) {
                     Ok(aggregate) => Ok((gen, EntityProxy::new(id, aggregate))), 
                     Err(err) => Err(AggregateError::CouldNotHydrateFromSnapshot(err))
                 }
@@ -59,7 +59,7 @@ impl<Agg: Aggregate> AggregateProxy<Agg> {
         }
     }
 
-    fn apply_and_grow(&mut self, evt: &Evt<Agg::EvtData>) -> Result<(), AggregateError<Agg>> {
+    fn apply_and_grow(&mut self, evt: &Evt<Agg>) -> Result<(), AggregateError<Agg>> {
         match self.entity_proxy.entity_mut().apply(evt) {
             Ok(()) => {
                 // Event applied.
@@ -78,7 +78,7 @@ impl<Agg: Aggregate> AggregateProxy<Agg> {
         self.entity_proxy.id()
     }
 
-    pub fn simulate(&self, cmd: &Cmd<Agg::CmdData>) -> Result<Vec<Evt<Agg::EvtData>>, AggregateError<Agg>> {
+    pub fn simulate(&self, cmd: &Cmd<Agg>) -> Result<Vec<Evt<Agg>>, AggregateError<Agg>> {
         if self.is_corrupt {
             Err(AggregateError::CorruptionDetected)
         } else {
@@ -89,7 +89,7 @@ impl<Agg: Aggregate> AggregateProxy<Agg> {
         }
     }
 
-    pub fn execute(&mut self, cmd: &Cmd<Agg::CmdData>) -> Result<Vec<Evt<Agg::EvtData>>, AggregateError<Agg>> {
+    pub fn execute(&mut self, cmd: &Cmd<Agg>) -> Result<Vec<Evt<Agg>>, AggregateError<Agg>> {
         self.simulate(cmd).and_then(|evts| {
             if evts.len() > 0 {
                 if let Err(()) = self.event_store.store(&evts, self.generation) {

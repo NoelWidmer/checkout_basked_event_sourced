@@ -10,6 +10,10 @@ pub struct Item {
 
 impl IdTypeDef for Item {
     type Id = Uuid;
+
+    fn id(&self) -> Self::Id {
+        self.product_id
+    }
 }
 
 impl Item {
