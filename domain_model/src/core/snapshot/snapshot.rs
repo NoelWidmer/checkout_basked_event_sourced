@@ -2,11 +2,11 @@ use crate::core::*;
 
 pub struct Snapshot<Agg: Aggregate> {
     generation: u64,
-    payload: Agg::SnapshotData,
+    payload: Agg::SnapshotPayload,
 }
 
 impl<Agg: Aggregate> Snapshot<Agg> {
-    pub fn new(generation: u64, payload: Agg::SnapshotData) -> Self {
+    pub fn new(generation: u64, payload: Agg::SnapshotPayload) -> Self {
         Self {
             generation,
             payload,
@@ -17,7 +17,7 @@ impl<Agg: Aggregate> Snapshot<Agg> {
         self.generation
     }
 
-    pub fn payload(self) -> Agg::SnapshotData {
+    pub fn payload(self) -> Agg::SnapshotPayload {
         self.payload
     }
 }

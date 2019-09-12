@@ -1,7 +1,6 @@
 use uuid::Uuid;
 use chrono::prelude::*;
 
-#[derive(Clone, Copy)]
 pub struct EvtMeta {
     correlation: Uuid,
     occured_at: DateTime<Utc>,

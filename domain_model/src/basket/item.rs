@@ -4,6 +4,7 @@ use crate::core::IdTypeDef;
 
 #[derive(Clone, Copy)]
 pub struct Item {
+    id: Uuid,
     product_id: Uuid, 
     quantity: Quantity,
 }
@@ -11,14 +12,15 @@ pub struct Item {
 impl IdTypeDef for Item {
     type Id = Uuid;
 
-    fn id(&self) -> Self::Id {
-        self.product_id
+    fn id(&self) -> &Self::Id {
+        &self.id
     }
 }
 
 impl Item {
-    pub fn new(product_id: Uuid, quantity: Quantity) -> Self {
+    pub fn new(id: Uuid, product_id: Uuid, quantity: Quantity) -> Self {
         Self {
+            id, 
             product_id, 
             quantity
         }

@@ -16,21 +16,14 @@ pub struct Basket {
 impl IdTypeDef for Basket {
     type Id = Uuid;
 
-    fn id(&self) -> Self::Id {
-        self.id
+    fn id(&self) -> &Self::Id {
+        &self.id
     }
 }
 
 impl Basket {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn new_with_id(id: Uuid) -> Self {
-        Self {
-            id: id,
-            items: HashMap::new()
-        }
     }
 }
 
@@ -45,16 +38,23 @@ impl Default for Basket {
 
 impl Aggregate for Basket {
     type Kind = crate::AggregateKind;
-    type SnapshotData = super::SnapshotData;
-    type CmdData = super::CmdData;
-    type EvtData = super::EvtData;
+    type SnapshotPayload = super::SnapshotData;
+    type CmdPayload = super::CmdData;
+    type EvtPayload = super::EvtData;
     type Error = super::Error;
+
+    fn new_with_id(id: Uuid) -> Self {
+        Self {
+            id: id,
+            items: HashMap::new()
+        }
+    }
 
     fn kind() -> crate::AggregateKind {
         crate::AggregateKind::Basket
     }
     
-    fn try_from(data: Self::SnapshotData) -> Result<Self, super::Error> {
+    fn try_from(data: Self::SnapshotPayload) -> Result<Self, super::Error> {
         let s = Self {
             id: data.id(), 
             items: data.items()
@@ -63,7 +63,7 @@ impl Aggregate for Basket {
         Ok(s)
     }
 
-    fn into(&self) -> Self::SnapshotData {
+    fn into(&self) -> Self::SnapshotPayload {
         super::SnapshotData::new(self.id, self.items.clone())
     }
 
@@ -94,7 +94,7 @@ impl Basket {
             let item = {
                 let item_id = Uuid::new_v4();
                 let quantity = Quantity::new(1).expect("expected a quantity of 1");
-                EntityProxy::new(item_id, Item::new(add_item.product_id, quantity))
+                EntityProxy::new(Item::new(item_id, add_item.product_id, quantity))
             };
 
             let meta = EvtMeta::new_now(correlation);

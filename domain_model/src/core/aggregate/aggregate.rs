@@ -2,20 +2,24 @@ use crate::core::*;
 
 pub trait Aggregate : IdTypeDef + Default {
     type Kind;
-    type SnapshotData;
-    type CmdData;
-    type EvtData;
+    type SnapshotPayload;
+    type CmdPayload;
+    type EvtPayload;
     type Error;
 
+    // ctor
+    fn new_with_id(id: Self::Id) -> Self;
+    fn try_from(data: Self::SnapshotPayload) -> Result<Self, Self::Error>;
+    fn into(&self) -> Self::SnapshotPayload;
+
+    // address
     fn kind() -> Self::Kind;
 
     fn address(&self) -> AggregateAddress<Self> {
-        AggregateAddress::<Self>::new(Self::kind(), self.id())
+        AggregateAddress::new(Self::kind(), self.id())
     }
 
-    fn try_from(data: Self::SnapshotData) -> Result<Self, Self::Error>;
-    fn into(&self) -> Self::SnapshotData;
-
+    // messages
     fn handle(&self, cmd: &Cmd<Self>) -> Result<Vec<Evt<Self>>, Self::Error>;
     fn apply(&mut self, evt: &Evt<Self>) -> Result<(), Self::Error>;
 }

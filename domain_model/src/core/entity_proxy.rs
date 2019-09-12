@@ -5,15 +5,10 @@ pub struct EntityProxy<Entity: IdTypeDef> {
 }
 
 impl<Entity: IdTypeDef> EntityProxy<Entity> {
-    pub fn new(id: Entity::Id, entity: Entity) -> Self {
+    pub fn new(entity: Entity) -> Self {
         Self {
-            id, 
             entity
         }
-    }
-
-    pub fn id(&self) -> &Entity::Id {
-        &self.id
     }
 
     pub fn entity(&self) -> &Entity {
@@ -23,20 +18,15 @@ impl<Entity: IdTypeDef> EntityProxy<Entity> {
     pub fn entity_mut(&mut self) -> &mut Entity {
         &mut self.entity
     }
-}
 
-impl<Entity: IdTypeDef + Default> EntityProxy<Entity> {
-    pub fn new_default(id: Entity::Id) -> Self {
-        EntityProxy {
-            id, 
-            entity: Entity::default()
-        }
+    pub fn id(&self) -> &Entity::Id {
+        self.entity.id()
     }
 }
 
 impl<Entity: IdTypeDef> PartialEq for EntityProxy<Entity> {
     fn eq(&self, other: &EntityProxy<Entity>) -> bool {
-        self.id == other.id
+        self.entity.id() == other.entity.id()
     }
 }
 

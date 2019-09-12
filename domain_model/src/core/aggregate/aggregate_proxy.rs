@@ -37,11 +37,11 @@ impl<Agg: Aggregate> AggregateProxy<Agg> {
                 let gen = snapshot.generation();
 
                 match Agg::try_from(snapshot.payload()) {
-                    Ok(aggregate) => Ok((gen, EntityProxy::new(id, aggregate))), 
+                    Ok(aggregate) => Ok((gen, EntityProxy::new(aggregate))), 
                     Err(err) => Err(AggregateError::CouldNotHydrateFromSnapshot(err))
                 }
             }, 
-            Ok(None) => Ok((0, EntityProxy::new_default(id))), 
+            Ok(None) => Ok((0, EntityProxy::new(Agg::new_with_id(id)))), 
             Err(()) => Err(AggregateError::CouldNotRetrieveSnapshot)
         }
     }
